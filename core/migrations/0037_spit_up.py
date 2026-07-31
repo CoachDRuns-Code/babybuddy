@@ -35,9 +35,11 @@ class Migration(migrations.Migration):
                     "amount",
                     models.CharField(
                         choices=[
-                            ("small", "Small"),
-                            ("medium", "Medium"),
-                            ("large", "Large"),
+                            ("trace", "Trace (just a spot)"),
+                            ("dribble", "Dribble (a little)"),
+                            ("moderate", "Moderate (noticeable)"),
+                            ("large", "Large (soaks clothes)"),
+                            ("projectile", "Projectile / lots"),
                         ],
                         blank=True,
                         default="",

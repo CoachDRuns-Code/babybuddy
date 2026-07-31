@@ -893,9 +893,11 @@ class SpitUp(models.Model):
     model_name = "spit_up"
 
     AMOUNT_CHOICES = [
-        ("small", _("Small")),
-        ("medium", _("Medium")),
-        ("large", _("Large")),
+        ("trace", _("Trace (just a spot)")),
+        ("dribble", _("Dribble (a little)")),
+        ("moderate", _("Moderate (noticeable)")),
+        ("large", _("Large (soaks clothes)")),
+        ("projectile", _("Projectile / lots")),
     ]
 
     child = models.ForeignKey(
