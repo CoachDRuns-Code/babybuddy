@@ -509,3 +509,44 @@ class WeightForm(CoreModelForm, TaggableModelForm):
             "date": DateInput(),
             "notes": forms.Textarea(attrs={"rows": 5}),
         }
+
+
+class SpitUpForm(CoreModelForm):
+    fieldsets = [
+        {"fields": ["child", "time", "amount", "appearance"], "layout": "required"},
+        {
+            "fields": ["related_feeding"],
+            "layout": "advanced",
+            "layout_attrs": {"label": "Link to Feeding"},
+        },
+        {"fields": ["notes"], "layout": "advanced"},
+    ]
+
+    class Meta:
+        model = models.SpitUp
+        fields = ["child", "time", "amount", "appearance", "related_feeding", "notes"]
+        widgets = {
+            "child": ChildRadioSelect,
+            "time": DateTimeInput(),
+            "amount": PillRadioSelect(),
+            "related_feeding": forms.Select(),
+            "notes": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Populate related_feeding dropdown with recent feedings
+        recent_feedings = models.Feeding.objects.order_by("-end")[:20]
+        choices = [("", _("---------"))]
+        for f in recent_feedings:
+            label = f"{f.end.strftime('%m/%d %I:%M %p')} — {f.get_method_display()}"
+            if f.amount:
+                label += f" ({f.amount}ml)"
+            choices.append((f.id, label))
+        self.fields["related_feeding"].choices = choices
+
+        # Auto-select most recent feeding as default
+        if not (self.instance and self.instance.pk):
+            latest = models.Feeding.objects.order_by("-end").first()
+            if latest:
+                self.fields["related_feeding"].initial = latest.id
