@@ -910,6 +910,7 @@ def card_medication_last(context, child):
         "hide_empty": _hide_empty(context),
     }
 
+
 @register.inclusion_tag("cards/notes_recent.html", takes_context=True)
 def card_notes_recent(context, child):
     """
@@ -917,10 +918,7 @@ def card_notes_recent(context, child):
     time and text so caregivers can see what's been recorded without
     navigating to the notes list.
     """
-    recent = (
-        models.Note.objects.filter(child=child)
-        .order_by("-time")[:4]
-    )
+    recent = models.Note.objects.filter(child=child).order_by("-time")[:4]
 
     empty = len(recent) == 0
 
