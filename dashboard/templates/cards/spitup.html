@@ -7,11 +7,11 @@
     {% if latest %}
         <div>{{ count_24h }} <small class="text-muted">{% trans "episodes / 24h" %}</small></div>
         {% if by_amount %}
-        <small class="text-muted">
-            {% for amount, count in by_amount.items %}
-                {{ count }}× {{ amount }}{% if not forloop.last %} · {% endif %}
-            {% endfor %}
-        </small>
+            <small class="text-muted">
+                {% for amount, count in by_amount.items %}
+                    {{ count }}× {{ amount }}{% if not forloop.last %} · {% endif %}
+                {% endfor %}
+            </small>
         {% endif %}
     {% else %}
         {% trans "None" %}
