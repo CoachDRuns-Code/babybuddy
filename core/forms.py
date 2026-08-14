@@ -535,18 +535,40 @@ class SpitUpForm(CoreModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Populate related_feeding dropdown with recent feedings
-        recent_feedings = models.Feeding.objects.order_by("-end")[:20]
-        choices = [("", _("---------"))]
-        for f in recent_feedings:
-            label = f"{f.end.strftime('%m/%d %I:%M %p')} — {f.get_method_display()}"
+
+        def _feeding_label(f):
+            local_end = timezone.localtime(f.end)
+            label = f"{local_end.strftime('%m/%d %I:%M %p')} — {f.get_method_display()}"
             if f.amount:
                 label += f" ({f.amount}ml)"
-            choices.append((f.id, label))
-        self.fields["related_feeding"].choices = choices
+            return label
 
-        # Auto-select most recent feeding as default
-        if not (self.instance and self.instance.pk):
+        # Build related_feeding choices:
+        # - New record: show 20 most recent feedings
+        # - Existing record: show feedings within +/-6h of this spit-up's time,
+        #   so the relevant feeding stays selectable when editing old entries
+        choices = [("", _("---------"))]
+        if self.instance and self.instance.pk and self.instance.time:
+            ref_time = self.instance.time
+            window = timezone.timedelta(hours=6)
+            feedings = list(
+                models.Feeding.objects.filter(
+                    end__range=(ref_time - window, ref_time + window)
+                ).order_by("-end")
+            )
+            # Always include the currently-selected feeding even if outside window
+            if self.instance.related_feeding_id:
+                selected_id = self.instance.related_feeding_id
+                if not any(f.id == selected_id for f in feedings):
+                    feedings.insert(0, self.instance.related_feeding)
+            for f in feedings:
+                choices.append((f.id, _feeding_label(f)))
+        else:
+            for f in models.Feeding.objects.order_by("-end")[:20]:
+                choices.append((f.id, _feeding_label(f)))
+            # Auto-select most recent feeding as default
             latest = models.Feeding.objects.order_by("-end").first()
             if latest:
                 self.fields["related_feeding"].initial = latest.id
+
+        self.fields["related_feeding"].choices = choices
